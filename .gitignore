@@ -14,3 +14,7 @@ poetry.lock
 # PyTorch checkpoint
 *.pt
 poetry.lock
+
+# 研究環境臨時檔案
+C:/fake_cuda/
+fake_cuda/

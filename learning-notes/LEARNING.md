@@ -151,3 +151,31 @@ Unsloth 是一個專門優化大型語言模型(LLM)微調過程的開源工具�
 
 這種學習路徑會讓你從整體工作流程開始，逐漸深入到具體模型實現和底層優化技術，是理解LLM微調技術的有效途徑。
 
+# 使用說明
+
+您現在可以使用以下步驟來研究 Unsloth 代碼，而不會受到沒有 CUDA 環境的限制：
+
+1. **設置研究環境**：
+   ```
+   python -i setup_research_env.py
+   ```
+
+2. **導入 Unsloth 模組進行研究**：
+   ```python
+   import unsloth
+   from unsloth import models
+   ```
+
+3. **使用 research_unsloth.py 分析代碼結構**：
+   ```
+   python research_unsloth.py
+   ```
+
+這套工具解決了以下問題：
+1. `huggingface_hub.utils.token` 導入問題 - 通過模擬模組解決
+2. 類型表達式問題 - 通過提供必要的類型定義解決
+3. `_fast_inner_training_loop` 未定義問題 - 通過模擬函數解決
+4. `flash_attn` 缺失問題 - 通過模擬模組解決
+
+這些修補程式不會影響實際的代碼運行，只是為了讓您能夠更輕鬆地閱讀和理解 Unsloth 的代碼結構。
+
