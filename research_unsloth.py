@@ -1,13 +1,13 @@
 """
 Unsloth代碼研究腳本
-用於在無GPU環境中分析和研究unsloth代碼結構
+用於分析和研究unsloth代碼結構，支援真實CUDA環境
 """
 
 import os
 import sys
 import importlib
 import inspect
-from simulate_cuda import setup_fake_cuda_env, cleanup_fake_cuda_env
+import torch
 
 def analyze_module(module_name, depth=0, max_depth=2):
     """分析模組結構"""
@@ -78,12 +78,36 @@ def get_models_structure():
     except Exception as e:
         print(f"分析models時出錯: {e}")
 
+def print_system_info():
+    """打印系統信息"""
+    print("\n系統信息:")
+    print(f"PyTorch版本: {torch.__version__}")
+    
+    if torch.cuda.is_available():
+        print(f"CUDA是否可用: 是")
+        print(f"CUDA版本: {torch.version.cuda}")
+        print(f"CUDA設備數量: {torch.cuda.device_count()}")
+        print(f"當前CUDA設備: {torch.cuda.current_device()}")
+        print(f"CUDA設備名稱: {torch.cuda.get_device_name()}")
+        print(f"CUDA設備能力: {torch.cuda.get_device_capability()}")
+        
+        # 嘗試獲取cuDNN版本
+        try:
+            if torch.backends.cudnn.is_available():
+                print(f"cuDNN版本: {torch.backends.cudnn.version()}")
+            else:
+                print(f"cuDNN: 不可用")
+        except:
+            print(f"cuDNN: 檢測時發生錯誤")
+    else:
+        print("CUDA不可用，將使用CPU進行研究")
+
 def main():
     """主程序"""
     print("開始研究Unsloth代碼結構...")
     
-    # 設置模擬CUDA環境
-    original_cuda = setup_fake_cuda_env()
+    # 打印系統信息
+    print_system_info()
     
     try:
         # 導入unsloth
@@ -103,9 +127,6 @@ def main():
         print("無法導入unsloth，請確保它已正確安裝")
     except Exception as e:
         print(f"研究過程中發生錯誤: {e}")
-    finally:
-        # 恢復原始環境
-        cleanup_fake_cuda_env(original_cuda)
     
     print("\n研究完成！")
 

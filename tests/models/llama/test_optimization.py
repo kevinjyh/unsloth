@@ -178,14 +178,17 @@ class TestOptimizationFunctions:
         )
         
         # 測試fast_layernorm_compiled
-        with mock.patch('torch.compile', return_value=lambda x, y: x.forward(y)):
+        with mock.patch('torch.compile', return_value=lambda func: lambda x: func(x)) as mock_compile:
             output = fast_layernorm_compiled(mock_layernorm, X)
             
             # 驗證輸出形狀
             assert output.shape == X.shape or isinstance(output, mock.MagicMock)
             
-            # 驗證函數調用
-            mock_layernorm.forward.assert_called_once()
+            # 驗證編譯器調用
+            mock_compile.assert_called_once()
+            
+            # 驗證forward調用 (需通過編譯後的函數調用)
+            mock_layernorm.forward.assert_called_once_with(X)
     
     def test_llama_model_fast_forward_inference(self, setup_params):
         """測試LlamaModel快速推理的前向計算"""
