@@ -10,6 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 os.environ['CUDA_HOME'] = os.environ.get('CUDA_HOME', 'C:/fake_cuda')
 os.environ['DISABLE_UNSLOTH_FLASH_ATTN'] = '1'
 os.environ['UNSLOTH_DISABLE_FLASH_ATTN'] = '1'
+os.environ['UNSLOTH_DISABLE_GPU_CHECK'] = '1'  # 新增: 禁用 GPU 檢查
 
 # 確保fake_cuda目錄存在
 fake_cuda_dir = os.environ['CUDA_HOME']
@@ -88,12 +89,42 @@ class FakeCUDA:
 # 保存原始的torch.cuda
 original_cuda = torch.cuda
 
+# 創建用於修補初始化檢查的函數
+def patch_unsloth_init():
+    """修補 unsloth 的初始化檢查"""
+    try:
+        # 添加模擬模組到系統模組中
+        import importlib
+        from types import ModuleType
+        
+        class MockModule(ModuleType):
+            """模擬模組，用於替代無法導入的模組"""
+            def __init__(self, name):
+                super().__init__(name)
+                self.__name__ = name
+            
+            def __getattr__(self, attr):
+                if attr.startswith('__'):
+                    raise AttributeError(f"'{self.__name__}' has no attribute '{attr}'")
+                return MockModule(f"{self.__name__}.{attr}")
+        
+        # 模擬不存在的或需要的模組
+        sys.modules['flash_attn'] = MockModule('flash_attn')
+        sys.modules['xformers'] = MockModule('xformers')
+        
+        print("已添加模擬模組")
+    except Exception as e:
+        print(f"修補時發生錯誤: {e}")
+
 @pytest.fixture(autouse=True, scope="session")
 def mock_cuda():
     """自動模擬CUDA環境，在所有測試用例中生效"""
     # 替換為模擬版本
     torch.cuda = FakeCUDA()
     print("\n模擬CUDA環境已設置")
+    
+    # 應用修補
+    patch_unsloth_init()
     
     yield
     
